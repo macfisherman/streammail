@@ -1,0 +1,50 @@
+STREAM
+
+Stream is a set of messages between two entities. The stream is stored at a singular place, a stream server.
+A stream has an address, which is only shared by the two entities.
+
+STREAM addresses are in base58Check form (like bitcoin) but use the resulting secret key found
+via ECDH. That is, each entity uses their own private key in combination with the other recipients
+public key to derive a secret (ECDH). Then the following is done:
+
+VERSION[1 byte] = S
+HASH1[20 bytes] = RIPEMD-160(SHA256(VERSION secret))
+CHECKSUM[4 bytes] = first 4 bytes of SHA256(SHA256(VERSION HASH1)) (32 bytes)
+
+BINARY-ADDRESS [25 bytes] = VERSION HASH1 CHECKSUM
+STREAM ADDRESS (human readable) = BASE58(BINARY-ADDRESS) (treat binary address as two base256 numbers)
+
+STREAM servers CAN provide STREAM address generation
+STREAM servers MUST validate STREAM addresses with Base58Check
+
+STREAM messages should be blocked/symetrically encrypted with the secret from ECDH.
+This allows both parties to read messages, but a STREAM server doesn't enforce this and treats
+the data opacly (Sp?).
+   
+Stream servers use HTTPS and REST.
+
+Flow:
+
+POST /register/ADDRESS
+	Register address with server
+
+POST /ADDRESS
+	{ "message": DATA }
+	Adds a message to ADDRESS. Returns a message-id. Messages ids are sequences starting with 1. 
+
+GET /ADDRESS
+	get's all data, as a JSON payload:
+	{ "messages": [ DATA, DATA, etc ] }
+
+GET /ADDRESS/ID
+	gets a single message
+	{ "message": DATA }
+
+GET /ADDRESS/ID?count=N
+	get messages from ID to ID+N
+	{ "messages": [ DATA, DATA, ... ] }
+
+There is no delete functionality on a STREAM server
+
+ 
+
