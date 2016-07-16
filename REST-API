@@ -7,11 +7,13 @@ STREAM addresses are in base58Check form (like bitcoin) but use the resulting se
 via ECDH. That is, each entity uses their own private key in combination with the other recipients
 public key to derive a secret (ECDH). Then the following is done:
 
-VERSION[1 byte] = S
-HASH1[20 bytes] = RIPEMD-160(SHA256(VERSION secret))
-CHECKSUM[4 bytes] = first 4 bytes of SHA256(SHA256(VERSION HASH1)) (32 bytes)
+TYPE[1 byte] = 0x04 (means uncompressed key)
+SECRET = X 32 bytes || Y 32 bytes
+HASH1[20 bytes] = RIPEMD-160(SHA256(TYPE || SECRET))
+CHECKSUM[4 bytes] = first 4 bytes of SHA256(SHA256(TYPE HASH1)) (32 bytes)
 
-BINARY-ADDRESS [25 bytes] = VERSION HASH1 CHECKSUM
+ROUTE-PREFIX [1 byte] = 62 (decimal)
+BINARY-ADDRESS [25 bytes] = ROUTE-PREFIX HASH1 CHECKSUM
 STREAM ADDRESS (human readable) = BASE58(BINARY-ADDRESS) (treat binary address as two base256 numbers)
 
 STREAM servers CAN provide STREAM address generation
