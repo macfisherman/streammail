@@ -19,9 +19,11 @@ STREAM ADDRESS (human readable) = BASE58(BINARY-ADDRESS) (treat binary address a
 STREAM servers CAN provide STREAM address generation
 STREAM servers MUST validate STREAM addresses with Base58Check
 
-STREAM messages should be blocked/symetrically encrypted with the secret from ECDH.
+STREAM messages SHOULD be blocked/symetrically encrypted with the secret from ECDH.
 This allows both parties to read messages, but a STREAM server doesn't enforce this and treats
 the data opacly (Sp?).
+
+STREAM addresses start with S or R.
    
 Stream servers use HTTPS and REST.
 
@@ -29,6 +31,7 @@ Flow:
 
 POST /register/ADDRESS
 	Register address with server
+	ADDRESS MUST conform to base58Check
 
 POST /ADDRESS
 	{ "message": DATA }
