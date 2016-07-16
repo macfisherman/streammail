@@ -27,8 +27,9 @@ func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	address := ps.ByName("address")
-	if (address[0] != 'S') || (address[0] != 'R') {
-		fmt.Fprintf(w, "{ \"error\": \"address is not a STREAM address\" } \n")
+	log.Printf("address is: %c:%v", address[0], address)
+	if !((address[0] == 'S') || (address[0] == 'R')) {
+		report_error(w, "address not a STREAM address")
 		return
 	}
 	_, _, err := base58.CheckDecode(address)
