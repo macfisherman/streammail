@@ -35,7 +35,7 @@ POST /register/ADDRESS
 
 POST /post/ADDRESS
 	The post body contains the message.
-	Adds a message to ADDRESS. Returns a message-id. Messages ids are sequences starting with 1. 
+	Adds a message to ADDRESS. Returns a message-id. Messages ids are timestamps in UTC.
 
 GET /ADDRESS
 	get's all data, as a JSON payload:
