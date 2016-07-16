@@ -33,8 +33,8 @@ POST /register/ADDRESS
 	Register address with server
 	ADDRESS MUST conform to base58Check
 
-POST /ADDRESS
-	{ "message": DATA }
+POST /post/ADDRESS
+	The post body contains the message.
 	Adds a message to ADDRESS. Returns a message-id. Messages ids are sequences starting with 1. 
 
 GET /ADDRESS
