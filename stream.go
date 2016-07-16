@@ -9,6 +9,14 @@ import (
 	"os"
 )
 
+func report_error(w http.ResponseWriter, e string) {
+	fmt.Fprintf(w, "{ \"error\": \"%s\" } \n", e)
+}
+
+func report_status(w http.ResponseWriter, s string) {
+	fmt.Fprintf(w, "{ \"status\": \"%s\" } \n", s)
+}
+
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
@@ -25,15 +33,15 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 	_, _, err := base58.CheckDecode(address)
 	if err != nil {
-		fmt.Fprintf(w, "{ \"error\": \"address format is invalid.\" }\n")
+		report_error(w, "address format is invalid")
 		return
 	}
 
 	err = os.Mkdir(ps.ByName("address"), 0755)
 	if err != nil {
-		fmt.Fprintf(w, "{ \"error\": \"unable to create address\"}")
+		report_error(w, "unable to create address:"+err.Error())
 	} else {
-		fmt.Fprintf(w, "{ \"status\": \"address registered\"}")
+		report_status(w, "address registered")
 	}
 }
 
