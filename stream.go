@@ -22,7 +22,7 @@ func report_status(w http.ResponseWriter, s string) {
 	fmt.Fprintf(w, "{ \"status\": \"%s\" } \n", s)
 }
 
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func IndexPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
@@ -139,7 +139,7 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func main() {
 	router := httprouter.New()
-	router.GET("/", Index)
+	router.GET("/", IndexPage)
 	router.POST("/register/:address", Register)
 	router.POST("/post/:address", Message)
 	router.GET("/index/:address", Index)
