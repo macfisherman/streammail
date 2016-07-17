@@ -30,7 +30,7 @@ func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
 }
 
-func Message(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	address := ps.ByName("address")
 	filename := time.Now().UTC().Format(time.RFC3339Nano)
 	msg, err := os.Create(address + "/" + filename)
@@ -46,6 +46,21 @@ func Message(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	report_status(w, "saved "+filename)
+}
+
+func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	filepath := ps.ByName("address") + "/" + ps.ByName("id")
+	msg, err := os.Open(filepath)
+	if err != nil {
+		report_error(w, err.Error())
+		return
+	}
+	defer msg.Close()
+
+	if _, err := io.Copy(w, msg); err != nil {
+		report_error(w, err.Error())
+		return
+	}
 }
 
 func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -141,8 +156,9 @@ func main() {
 	router := httprouter.New()
 	router.GET("/", IndexPage)
 	router.POST("/register/:address", Register)
-	router.POST("/post/:address", Message)
+	router.POST("/post/:address", PostMessage)
 	router.GET("/index/:address", Index)
+	router.GET("/get/:address/:id", GetMessage)
 	router.GET("/hello/:name", Hello)
 
 	log.Fatal(http.ListenAndServe(":8080", router))

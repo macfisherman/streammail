@@ -44,9 +44,8 @@ GET /index/ADDRESS
 GET /index/ADDRESS?from=ID&count=N
 	get message ids from ID to ID+N
 
-GET /ADDRESS/ID?count=N
-	get messages from ID to ID+N
-	{ "messages": [ DATA, DATA, ... ] }
+GET /get/ADDRESS/ID
+	gets a single message
 
 There is no delete functionality on a STREAM server
 
