@@ -38,13 +38,11 @@ POST /post/ADDRESS
 	Adds a message to ADDRESS. Returns a message-id. Messages ids are timestamps in UTC
 	in RFC3339Nano format
 
-GET /ADDRESS
-	get's all data, as a JSON payload:
-	{ "messages": [ DATA, DATA, etc ] }
+GET /index/ADDRESS
+	get's all message-ids, as a JSON array.
 
-GET /ADDRESS/ID
-	gets a single message
-	{ "message": DATA }
+GET /index/ADDRESS?from=ID&count=N
+	get message ids from ID to ID+N
 
 GET /ADDRESS/ID?count=N
 	get messages from ID to ID+N
