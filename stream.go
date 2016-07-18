@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/julienschmidt/httprouter"
+	"github.com/urfave/negroni"
 	"io"
 	"log"
 	"net/http"
@@ -161,5 +162,8 @@ func main() {
 	router.GET("/get/:address/:id", GetMessage)
 	router.GET("/hello/:name", Hello)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	n := negroni.Classic()
+	n.UseHandler(router)
+
+	log.Fatal(http.ListenAndServe(":8080", n))
 }
