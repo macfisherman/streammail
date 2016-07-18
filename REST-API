@@ -29,11 +29,12 @@ Stream servers use HTTPS and REST.
 
 Flow:
 
-POST /register/ADDRESS
+POST /address
+	{ "address": ADDRESS }
 	Register address with server
 	ADDRESS MUST conform to base58Check
 
-POST /post/ADDRESS
+POST /message/ADDRESS
 	The post body contains the message.
 	Adds a message to ADDRESS. Returns a message-id. Messages ids are timestamps in UTC
 	in RFC3339Nano format
@@ -44,7 +45,7 @@ GET /index/ADDRESS
 GET /index/ADDRESS?from=ID&count=N
 	get message ids from ID to ID+N
 
-GET /get/ADDRESS/ID
+GET /message/ADDRESS/ID
 	gets a single message
 
 There is no delete functionality on a STREAM server
