@@ -180,10 +180,10 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func main() {
 	router := httprouter.New()
 	router.GET("/", IndexPage)
-	router.POST("/address/", Register)
-	router.POST("/post/:address", PostMessage)
+	router.POST("/address", Register)
+	router.POST("/message/:address", PostMessage)
 	router.GET("/index/:address", Index)
-	router.GET("/get/:address/:id", GetMessage)
+	router.GET("/message/:address/:id", GetMessage)
 
 	n := negroni.Classic()
 	n.UseHandler(router)
