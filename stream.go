@@ -61,7 +61,7 @@ func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	w.Header().Set("Location", "/message/"+path)
-	report_status(w, 201, map[string]string{"ok": "saved " + path})
+	report_status(w, 201, map[string]string{"ok": path})
 }
 
 func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
