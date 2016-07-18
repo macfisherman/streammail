@@ -15,51 +15,67 @@ import (
 	"time"
 )
 
-func report_error(w http.ResponseWriter, e string) {
-	fmt.Fprintf(w, "{ \"error\": \"%s\" } \n", e)
+func WriteJSON(w http.ResponseWriter, v interface{}) error {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Write(b)
+	return nil
 }
 
-func report_status(w http.ResponseWriter, s string) {
-	fmt.Fprintf(w, "{ \"status\": \"%s\" } \n", s)
+func report_error(w http.ResponseWriter, code int, err string) {
+	w.WriteHeader(code)
+
+	WriteJSON(w, map[string]string{
+		"error": err,
+	})
+}
+
+func report_status(w http.ResponseWriter, code int, v interface{}) error {
+	w.WriteHeader(code)
+
+	return WriteJSON(w, v)
 }
 
 func IndexPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-}
-
 func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	address := ps.ByName("address")
 	filename := time.Now().UTC().Format(time.RFC3339Nano)
-	msg, err := os.Create(address + "/" + filename)
+	path := address + "/" + filename
+	msg, err := os.Create(path)
 	if err != nil {
-		report_error(w, err.Error())
+		report_error(w, 409, "in creating message file "+path+": "+err.Error())
 		return
 	}
 	defer msg.Close()
 
 	if _, err := io.Copy(msg, r.Body); err != nil {
-		report_error(w, err.Error())
+		report_error(w, 409, "in serializing messagee "+path+": "+err.Error())
 		return
 	}
 
-	report_status(w, "saved "+filename)
+	w.Header().Set("Location", "/message/"+path)
+	report_status(w, 201, map[string]string{"ok": "saved " + path})
 }
 
 func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	filepath := ps.ByName("address") + "/" + ps.ByName("id")
 	msg, err := os.Open(filepath)
 	if err != nil {
-		report_error(w, err.Error())
+		report_error(w, 409, filepath+": "+err.Error())
 		return
 	}
 	defer msg.Close()
 
+	// might want to rethink how msg is just a blob and not a JSON object
 	if _, err := io.Copy(w, msg); err != nil {
-		report_error(w, err.Error())
+		report_error(w, 409, err.Error())
 		return
 	}
 }
@@ -70,14 +86,14 @@ func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	dirHandle, err := os.Open(address)
 	if err != nil {
-		report_error(w, err.Error())
+		report_error(w, 404, err.Error())
 		return
 	}
 	defer dirHandle.Close()
 
 	files, err := dirHandle.Readdir(0)
 	if err != nil {
-		report_error(w, err.Error())
+		report_error(w, 409, err.Error())
 		return
 	}
 
@@ -96,7 +112,7 @@ func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if n := vars.Get("count"); n != "" {
 		count, err = strconv.Atoi(n)
 		if err != nil {
-			report_error(w, err.Error())
+			report_error(w, 400, "invalid number "+n+" :"+err.Error())
 			return
 		}
 	}
@@ -127,40 +143,47 @@ func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	encoder := json.NewEncoder(w)
 	err = encoder.Encode(names[:count]) // only return count
 	if err != nil {
-		report_error(w, err.Error())
+		report_error(w, 409, err.Error())
 		return
 	}
 }
 
+type Data struct {
+	Address string
+}
+
 func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	address := ps.ByName("address")
+	var result Data
+	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+		r.Body.Close()
+		report_error(w, 400, "unable to parse JSON: "+err.Error())
+	}
+	address := result.Address
 	log.Printf("address is: %c:%v", address[0], address)
 	if !((address[0] == 'S') || (address[0] == 'R')) {
-		report_error(w, "address not a STREAM address")
+		report_error(w, 400, "address not a STREAM address")
 		return
 	}
-	_, _, err := base58.CheckDecode(address)
-	if err != nil {
-		report_error(w, "address format is invalid")
+	if _, _, err := base58.CheckDecode(address); err != nil {
+		report_error(w, 400, "address format is invalid")
 		return
 	}
 
-	err = os.Mkdir(ps.ByName("address"), 0755)
-	if err != nil {
-		report_error(w, "unable to create address:"+err.Error())
+	if err := os.Mkdir(address, 0755); err != nil {
+		report_error(w, 409, "unable to create address:"+err.Error())
 	} else {
-		report_status(w, "address registered")
+		w.Header().Set("Location", "/address/"+address)
+		report_status(w, 201, map[string]string{"ok": "address registered"})
 	}
 }
 
 func main() {
 	router := httprouter.New()
 	router.GET("/", IndexPage)
-	router.POST("/register/:address", Register)
+	router.POST("/address/", Register)
 	router.POST("/post/:address", PostMessage)
 	router.GET("/index/:address", Index)
 	router.GET("/get/:address/:id", GetMessage)
-	router.GET("/hello/:name", Hello)
 
 	n := negroni.Classic()
 	n.UseHandler(router)
