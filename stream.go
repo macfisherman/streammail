@@ -148,18 +148,16 @@ func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
-type Data struct {
-	Address string
-}
-
 func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var result Data
-	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
+	var fields map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
 		r.Body.Close()
 		report_error(w, 400, "unable to parse JSON: "+err.Error())
 	}
-	address := result.Address
-	log.Printf("address is: %c:%v", address[0], address)
+
+	address, _ := fields["address"].(string)
+	log.Printf("address is: %v", address)
+	log.Print("got here")
 	if !((address[0] == 'S') || (address[0] == 'R')) {
 		report_error(w, 400, "address not a STREAM address")
 		return
