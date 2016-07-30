@@ -170,7 +170,7 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := os.Mkdir(address, 0755); err != nil {
 		report_error(w, 409, "unable to create address:"+err.Error())
 	} else {
-		w.Header().Set("Location", "/address/"+address)
+		w.Header().Set("Location", "/stream/"+address)
 		report_status(w, 201, map[string]string{"ok": "address registered"})
 	}
 }
@@ -178,7 +178,7 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func main() {
 	router := httprouter.New()
 	router.GET("/", IndexPage)
-	router.POST("/address", Register)
+	router.POST("/stream", Register)
 	router.POST("/message/:address", PostMessage)
 	router.GET("/index/:address", Index)
 	router.GET("/message/:address/:id", GetMessage)
