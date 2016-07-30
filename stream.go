@@ -155,7 +155,12 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		report_error(w, 400, "unable to parse JSON: "+err.Error())
 	}
 
-	address, _ := fields["address"].(string)
+	address, ok := fields["address"].(string)
+	if !ok {
+		report_error(w, 400, "missing needed field, address")
+		return
+	}
+
 	log.Printf("address is: %v", address)
 	log.Print("got here")
 	if !((address[0] == 'S') || (address[0] == 'R')) {
