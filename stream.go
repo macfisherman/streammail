@@ -163,7 +163,6 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	log.Printf("address is: %v", address)
-	log.Print("got here")
 	if !((address[0] == 'S') || (address[0] == 'R')) {
 		report_error(w, 400, "address not a STREAM address")
 		return
