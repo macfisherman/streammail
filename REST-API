@@ -62,7 +62,7 @@ POST /stream/ADDRESS/message
 	Adds a message to ADDRESS. Returns a message-id. Messages ids are timestamps in UTC
 	in RFC3339Nano format
 
-GET /stream/ADDRESS/index
+GET /stream/ADDRESS
 	get's all message-ids, as a JSON array.
 
 GET /stream/ADDRESS/index?from=ID&count=N
