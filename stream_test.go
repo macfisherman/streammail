@@ -32,7 +32,7 @@ func postString(t *testing.T, data string, uri string) *http.Response {
 	return resp
 }
 
-func postMapAsJSON(t *testing.T, d map[string]string, uri string) *http.Response {
+func postMap(t *testing.T, d map[string]string, uri string) *http.Response {
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(d)
 	resp, err := http.Post(uri, "application/json", buffer)
@@ -71,7 +71,7 @@ func TestStreamAddresses(t *testing.T) {
 }
 
 func TestMissingFieldAddress(t *testing.T) {
-	resp := postMapAsJSON(t, map[string]string{"addressy": address}, baseURI)
+	resp := postMap(t, map[string]string{"addressy": address}, baseURI)
 	v := decodeResponse(t, resp)
 	if v["error"] != "missing needed field, address" {
 		t.Error("Expected [missing needed field, address], got", v["error"])
