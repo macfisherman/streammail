@@ -18,6 +18,16 @@ type addressCriteria struct {
 	Want    string
 }
 
+func postString(t *testing.T, data string, uri string) *http.Response {
+	buffer := bytes.NewBufferString(data)
+	resp, err := http.Post(uri, "application/json", buffer)
+	if err != nil {
+		t.Fatal("fatal error in posting:", err)
+	}
+
+	return resp
+}
+
 func postMapAsJSON(t *testing.T, d map[string]string, uri string) *http.Response {
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(d)
@@ -57,66 +67,28 @@ func TestStreamAddresses(t *testing.T) {
 }
 
 func TestMissingFieldAddress(t *testing.T) {
-	data := map[string]string{"addressy": address}
-	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(data)
-	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
-	if err != nil {
-		t.Error("error in POSTING", err)
-	}
-	// decode response
-	var v map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
-		t.Error("error in json decoding body", err)
-	}
-
+	resp := postMapAsJSON(t, map[string]string{"addressy": address}, baseURI)
+	v := decodeResponse(t, resp)
 	if v["error"] != "missing needed field, address" {
 		t.Error("Expected [missing needed field, address], got", v["error"])
 	}
 }
 
 func TestStreamBogusJSON(t *testing.T) {
-	buffer := bytes.NewBufferString("\"address\": \"" + address + "\"") // not a json object
-	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
-	if err != nil {
-		t.Error("error in POSTING", err)
-	}
-	// decode response
-	var v map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
-		t.Error("error in json decoding body", err)
-	}
-
+	resp := postString(t, "\"address\": \""+address+"\"", baseURI)
+	v := decodeResponse(t, resp)
 	if !strings.Contains(v["error"].(string), "unable to parse JSON") {
 		t.Error("Expected [unable to parse JSON...], got", v["error"])
 	}
 }
 
-func TestStreamExisiting(t *testing.T) {
+func TestStreamExisting(t *testing.T) {
 	os.RemoveAll(address)
-	data := map[string]string{"address": address}
-	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(data)
-	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
-	if err != nil {
-		t.Error("error in POSTING", err)
-	}
+	_ = postMapAsJSON(t, map[string]string{"address": address}, baseURI)
 
 	// post again
-	data = map[string]string{"address": address}
-	buffer = new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(data)
-	resp, err = http.Post("http://localhost:8080/stream", "application/json", buffer)
-	if err != nil {
-		t.Error("error in POSTING", err)
-	}
-
-	// decode response
-	var v map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
-		t.Error("error in json decoding body", err)
-	}
-
+	resp := postMapAsJSON(t, map[string]string{"address": address}, baseURI)
+	v := decodeResponse(t, resp)
 	if !strings.Contains(v["error"].(string), "unable to create address") {
 		t.Error("Expected [unable to create address...], got", v["error"])
 	}
@@ -124,28 +96,11 @@ func TestStreamExisiting(t *testing.T) {
 
 func TestStreamMessage(t *testing.T) {
 	os.RemoveAll(address)
-	data := map[string]string{"address": address}
-	buffer := new(bytes.Buffer)
-	json.NewEncoder(buffer).Encode(data)
-	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
-	if err != nil {
-		t.Error("error in POSTING", err)
-	}
+	_ = postMapAsJSON(t, map[string]string{"address": address}, baseURI)
 
 	// a message
-	buffer = bytes.NewBufferString("æ a utf-8 message ʩ")
-	resp, err = http.Post("http://localhost:8080/stream/"+address+"/message",
-		"application/json", buffer)
-	if err != nil {
-		t.Error("error in POSTING", err)
-	}
-
-	// decode response
-	var v map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
-		t.Error("error in json decoding body", err)
-	}
-
+	resp := postString(t, "æ a utf-8 message ʩ", baseURI+"/"+address+"/message")
+	v := decodeResponse(t, resp)
 	// TODO: see if it is a valid time-stamp
 	_, ok := v["ok"].(string)
 	if !ok {
