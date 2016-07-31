@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -18,12 +19,33 @@ type addressCriteria struct {
 	Want    string
 }
 
+func getIndex(t *testing.T, address string) *http.Response {
+	return (get(t, baseURI+"/"+address))
+}
+
 func postMessage(t *testing.T, address string, message string) *http.Response {
 	return postString(t, message, baseURI+"/"+address+"/message")
 }
 
 func newStream(t *testing.T, address string) *http.Response {
 	return postMap(t, map[string]string{"address": address}, baseURI)
+}
+
+func get(t *testing.T, uri string) *http.Response {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		t.Fatal("error creating request object:", err)
+	}
+
+	req.Header.Set("Content-Type", "application/vnd.api+json") // vnd.api should be something stream specific?
+	req.Header.Set("Accept", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal("error with GET request", err)
+	}
+
+	return resp
 }
 
 func postString(t *testing.T, data string, uri string) *http.Response {
@@ -49,6 +71,17 @@ func postMap(t *testing.T, d map[string]string, uri string) *http.Response {
 
 func decodeResponse(t *testing.T, r *http.Response) map[string]interface{} {
 	var v map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&v)
+	if err != nil {
+		t.Fatal("fatal error in decoding response:", err)
+	}
+
+	return v
+}
+
+func decodeResponseArray(t *testing.T, r *http.Response) []interface{} {
+	var v []interface{}
+
 	err := json.NewDecoder(r.Body).Decode(&v)
 	if err != nil {
 		t.Fatal("fatal error in decoding response:", err)
@@ -118,5 +151,21 @@ func TestStreamMessage(t *testing.T) {
 	if !strings.Contains(resp.Header.Get("Location"),
 		"/stream/SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q/message/") {
 		t.Error("Location header not set")
+	}
+}
+
+func TestStreamIndex(t *testing.T) {
+	os.RemoveAll(address)
+	_ = newStream(t, address)
+
+	// a bunch of messages
+	for i := 0; i < 10; i++ {
+		_ = postMessage(t, address, "message "+strconv.Itoa(i))
+	}
+	resp := getIndex(t, address)
+	v := decodeResponseArray(t, resp)
+	l := len(v)
+	if l != 10 {
+		t.Error("Expected 10 items, got", l)
 	}
 }

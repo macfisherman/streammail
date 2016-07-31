@@ -185,7 +185,7 @@ func main() {
 	router.GET("/", IndexPage)
 	router.POST("/stream", Register)
 	router.POST("/stream/:address/message", PostMessage)
-	router.GET("/index/:address", Index)
+	router.GET("/stream/:address", Index)
 	router.GET("/message/:address/:id", GetMessage)
 
 	n := negroni.Classic()
