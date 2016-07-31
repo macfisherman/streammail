@@ -17,6 +17,27 @@ type addressCriteria struct {
 	Want    string
 }
 
+func postMapAsJSON(t *testing.T, d map[string]string, uri string) *http.Response {
+	buffer := new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(d)
+	resp, err := http.Post(uri, "application/json", buffer)
+	if err != nil {
+		t.Fatal("fatal error in posting:", err)
+	}
+
+	return resp
+}
+
+func decodeResponse(t *testing.T, r *http.Response) map[string]interface{} {
+	var v map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&v)
+	if err != nil {
+		t.Fatal("fatal error in decoding response:", err)
+	}
+
+	return v
+}
+
 func TestStreamAddresses(t *testing.T) {
 	criteria := []addressCriteria{
 		{"SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q", "ok", "address registered"},
@@ -25,18 +46,8 @@ func TestStreamAddresses(t *testing.T) {
 
 	os.RemoveAll("SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q")
 	for _, c := range criteria {
-		data := map[string]string{"address": c.Address}
-		buffer := new(bytes.Buffer)
-		json.NewEncoder(buffer).Encode(data)
-		resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
-		if err != nil {
-			t.Error("error in POSTING", err)
-		}
-		// decode response
-		var v map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
-			t.Error("error in json decoding body", err)
-		}
+		resp := postMapAsJSON(t, map[string]string{"address": c.Address}, baseURI)
+		v := decodeResponse(t, resp)
 
 		if v[c.Field] != c.Want {
 			t.Errorf("Expected [%s], got [%s]", c.Want, v[c.Field])
