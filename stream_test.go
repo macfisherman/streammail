@@ -18,6 +18,10 @@ type addressCriteria struct {
 	Want    string
 }
 
+func newStream(t *testing.T, address string) *http.Response {
+	return postMap(t, map[string]string{"address": address}, baseURI)
+}
+
 func postString(t *testing.T, data string, uri string) *http.Response {
 	buffer := bytes.NewBufferString(data)
 	resp, err := http.Post(uri, "application/json", buffer)
@@ -57,7 +61,7 @@ func TestStreamAddresses(t *testing.T) {
 
 	os.RemoveAll("SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q")
 	for _, c := range criteria {
-		resp := postMapAsJSON(t, map[string]string{"address": c.Address}, baseURI)
+		resp := newStream(t, c.Address)
 		v := decodeResponse(t, resp)
 
 		if v[c.Field] != c.Want {
@@ -84,10 +88,9 @@ func TestStreamBogusJSON(t *testing.T) {
 
 func TestStreamExisting(t *testing.T) {
 	os.RemoveAll(address)
-	_ = postMapAsJSON(t, map[string]string{"address": address}, baseURI)
-
+	_ = newStream(t, address)
 	// post again
-	resp := postMapAsJSON(t, map[string]string{"address": address}, baseURI)
+	resp := newStream(t, address)
 	v := decodeResponse(t, resp)
 	if !strings.Contains(v["error"].(string), "unable to create address") {
 		t.Error("Expected [unable to create address...], got", v["error"])
@@ -96,7 +99,7 @@ func TestStreamExisting(t *testing.T) {
 
 func TestStreamMessage(t *testing.T) {
 	os.RemoveAll(address)
-	_ = postMapAsJSON(t, map[string]string{"address": address}, baseURI)
+	_ = newStream(t, address)
 
 	// a message
 	resp := postString(t, "æ a utf-8 message ʩ", baseURI+"/"+address+"/message")
