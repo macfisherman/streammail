@@ -85,7 +85,6 @@ func TestStreamExisiting(t *testing.T) {
 	data := map[string]string{"address": address}
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(data)
-	fmt.Print(buffer)
 	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
 	if err != nil {
 		t.Error("error in POSTING", err)
@@ -95,7 +94,6 @@ func TestStreamExisiting(t *testing.T) {
 	data = map[string]string{"address": address}
 	buffer = new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(data)
-	fmt.Print(buffer)
 	resp, err = http.Post("http://localhost:8080/stream", "application/json", buffer)
 	if err != nil {
 		t.Error("error in POSTING", err)
