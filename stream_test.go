@@ -18,6 +18,10 @@ type addressCriteria struct {
 	Want    string
 }
 
+func postMessage(t *testing.T, address string, message string) *http.Response {
+	return postString(t, message, baseURI+"/"+address+"/message")
+}
+
 func newStream(t *testing.T, address string) *http.Response {
 	return postMap(t, map[string]string{"address": address}, baseURI)
 }
@@ -102,7 +106,7 @@ func TestStreamMessage(t *testing.T) {
 	_ = newStream(t, address)
 
 	// a message
-	resp := postString(t, "æ a utf-8 message ʩ", baseURI+"/"+address+"/message")
+	resp := postMessage(t, address, "æ a utf-8 message ʩ")
 	v := decodeResponse(t, resp)
 	// TODO: see if it is a valid time-stamp
 	_, ok := v["ok"].(string)
