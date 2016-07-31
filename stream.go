@@ -60,8 +60,8 @@ func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	w.Header().Set("Location", "/message/"+path)
-	report_status(w, 201, map[string]string{"ok": path})
+	w.Header().Set("Location", "/stream/"+address+"/message/"+filename)
+	report_status(w, 201, map[string]string{"ok": filename})
 }
 
 func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -184,7 +184,7 @@ func main() {
 	router := httprouter.New()
 	router.GET("/", IndexPage)
 	router.POST("/stream", Register)
-	router.POST("/message/:address", PostMessage)
+	router.POST("/stream/:address/message", PostMessage)
 	router.GET("/index/:address", Index)
 	router.GET("/message/:address/:id", GetMessage)
 

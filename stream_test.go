@@ -111,3 +111,40 @@ func TestStreamExisiting(t *testing.T) {
 		t.Error("Expected [unable to create address...], got", v["error"])
 	}
 }
+
+func TestStreamMessage(t *testing.T) {
+	os.RemoveAll(address)
+	data := map[string]string{"address": address}
+	buffer := new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(data)
+	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
+	if err != nil {
+		t.Error("error in POSTING", err)
+	}
+
+	// a message
+	buffer = bytes.NewBufferString("æ a utf-8 message ʩ")
+	resp, err = http.Post("http://localhost:8080/stream/"+address+"/message",
+		"application/json", buffer)
+	if err != nil {
+		t.Error("error in POSTING", err)
+	}
+
+	// decode response
+	var v map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
+		t.Error("error in json decoding body", err)
+	}
+
+	// TODO: see if it is a valid time-stamp
+	_, ok := v["ok"].(string)
+	if !ok {
+		t.Error("Expected an ok response")
+	}
+
+	// see if there is a location header
+	if !strings.Contains(resp.Header.Get("Location"),
+		"/stream/SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q/message/") {
+		t.Error("Location header not set")
+	}
+}
