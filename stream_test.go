@@ -79,3 +79,35 @@ func TestStreamBogusJSON(t *testing.T) {
 		t.Error("Expected [unable to parse JSON...], got", v["error"])
 	}
 }
+
+func TestStreamExisiting(t *testing.T) {
+	os.RemoveAll(address)
+	data := map[string]string{"address": address}
+	buffer := new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(data)
+	fmt.Print(buffer)
+	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
+	if err != nil {
+		t.Error("error in POSTING", err)
+	}
+
+	// post again
+	data = map[string]string{"address": address}
+	buffer = new(bytes.Buffer)
+	json.NewEncoder(buffer).Encode(data)
+	fmt.Print(buffer)
+	resp, err = http.Post("http://localhost:8080/stream", "application/json", buffer)
+	if err != nil {
+		t.Error("error in POSTING", err)
+	}
+
+	// decode response
+	var v map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
+		t.Error("error in json decoding body", err)
+	}
+
+	if !strings.Contains(v["error"].(string), "unable to create address") {
+		t.Error("Expected [unable to create address...], got", v["error"])
+	}
+}
