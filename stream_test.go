@@ -10,6 +10,7 @@ import (
 )
 
 const address = "SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q"
+const baseURI = "http://localhost:8080/stream"
 
 type addressCriteria struct {
 	Address string
