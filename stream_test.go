@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -59,5 +60,22 @@ func TestMissingFieldAddress(t *testing.T) {
 
 	if v["error"] != "missing needed field, address" {
 		t.Error("Expected [missing needed field, address], got", v["error"])
+	}
+}
+
+func TestStreamBogusJSON(t *testing.T) {
+	buffer := bytes.NewBufferString("\"address\": \"" + address + "\"") // not a json object
+	resp, err := http.Post("http://localhost:8080/stream", "application/json", buffer)
+	if err != nil {
+		t.Error("error in POSTING", err)
+	}
+	// decode response
+	var v map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
+		t.Error("error in json decoding body", err)
+	}
+
+	if !strings.Contains(v["error"].(string), "unable to parse JSON") {
+		t.Error("Expected [unable to parse JSON...], got", v["error"])
 	}
 }

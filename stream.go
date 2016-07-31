@@ -153,6 +153,7 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
 		r.Body.Close()
 		report_error(w, 400, "unable to parse JSON: "+err.Error())
+		return
 	}
 
 	address, ok := fields["address"].(string)
