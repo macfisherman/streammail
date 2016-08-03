@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,6 +18,14 @@ type addressCriteria struct {
 	Address string
 	Field   string
 	Want    string
+}
+
+func getIndexFrom(t *testing.T, address string, from string, count int) *http.Response {
+	uri := baseURI + "/" + address + "/index?from=" + from
+	if count > 0 {
+		uri = uri + "&count=" + strconv.Itoa(count)
+	}
+	return (get(t, uri))
 }
 
 func getIndex(t *testing.T, address string) *http.Response {
@@ -40,6 +49,7 @@ func get(t *testing.T, uri string) *http.Response {
 
 	req.Header.Set("Content-Type", "application/vnd.api+json") // vnd.api should be something stream specific?
 	req.Header.Set("Accept", "application/json")
+	fmt.Println("uri:", uri)
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatal("error with GET request", err)
@@ -167,5 +177,37 @@ func TestStreamIndex(t *testing.T) {
 	l := len(v)
 	if l != 10 {
 		t.Error("Expected 10 items, got", l)
+	}
+}
+
+func TestStreamIndexFrom(t *testing.T) {
+	os.RemoveAll(address)
+	_ = newStream(t, address)
+
+	// a bunch of messages
+	for i := 0; i < 120; i++ {
+		_ = postMessage(t, address, "message "+strconv.Itoa(i))
+	}
+	resp := getIndex(t, address)
+	v := decodeResponseArray(t, resp)
+	l := len(v)
+	if l != 100 {
+		t.Error("Expected 100 items, got", l)
+	}
+
+	from := v[99].(string)
+	resp = getIndexFrom(t, address, from, 4)
+	v = decodeResponseArray(t, resp)
+	l = len(v)
+	if l != 4 {
+		t.Error("Expected 4 items, got", l)
+	}
+
+	from = v[3].(string)
+	resp = getIndexFrom(t, address, from, 0)
+	v = decodeResponseArray(t, resp)
+	l = len(v)
+	if l != 16 {
+		t.Error("Expected 16 items, got", l)
 	}
 }
