@@ -206,7 +206,7 @@ func TestStreamIndexFrom(t *testing.T) {
 	resp = getIndexFrom(t, address, from, 0)
 	v = decodeResponseArray(t, resp)
 	l = len(v)
-	if l != 16 {
-		t.Error("Expected 16 items, got", l)
+	if l != 18 {
+		t.Error("Expected 18 items, got", l)
 	}
 }
