@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+//	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -49,7 +49,6 @@ func get(t *testing.T, uri string) *http.Response {
 
 	req.Header.Set("Content-Type", "application/vnd.api+json") // vnd.api should be something stream specific?
 	req.Header.Set("Accept", "application/json")
-	fmt.Println("uri:", uri)
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatal("error with GET request", err)
