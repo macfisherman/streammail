@@ -68,7 +68,7 @@ func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	filepath := ps.ByName("address") + "/" + ps.ByName("id")
 	msg, err := os.Open(filepath)
 	if err != nil {
-		report_error(w, 409, filepath+": "+err.Error())
+		report_error(w, 404, filepath+": "+err.Error())
 		return
 	}
 	defer msg.Close()
