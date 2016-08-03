@@ -68,7 +68,7 @@ GET /stream/ADDRESS
 GET /stream/ADDRESS/index?from=ID&count=N
 	get message ids from ID to ID+N
 
-GET /stream/ADDRESS/ID
+GET /stream/ADDRESS/message/ID
 	gets a single message
 
 

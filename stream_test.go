@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"io/ioutil"
 	"testing"
 )
 
@@ -34,6 +35,10 @@ func getIndex(t *testing.T, address string) *http.Response {
 
 func postMessage(t *testing.T, address string, message string) *http.Response {
 	return postString(t, message, baseURI+"/"+address+"/message")
+}
+
+func getMessage(t *testing.T, address string, id string) *http.Response {
+	return get(t, baseURI+"/"+address+"/message/"+id)
 }
 
 func newStream(t *testing.T, address string) *http.Response {
@@ -208,5 +213,28 @@ func TestStreamIndexFrom(t *testing.T) {
 	l = len(v)
 	if l != 18 {
 		t.Error("Expected 18 items, got", l)
+	}
+}
+
+func TestStreamGetMessage(t *testing.T) {
+	os.RemoveAll(address)
+
+	_ = newStream(t, address)
+	_ = postMessage(t, address, "message one")
+
+	// get first message
+	resp := getIndex(t, address)
+	v := decodeResponseArray(t, resp)
+	resp = getMessage(t, address, v[0].(string))
+	
+	//getMessage just returns messsage as a blob
+	defer resp.Body.Close()
+	message, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal("error reading body", err)
+	}
+	
+	if string(message) != "message one" {
+		t.Error("expected [message one], got", message)
 	}
 }
