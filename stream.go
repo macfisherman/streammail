@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+const VERSION = "v1"
+const API = "stream"
+const APP = "/"+API+"/"+VERSION
+
 func WriteJSON(w http.ResponseWriter, v interface{}) error {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -183,11 +187,11 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func main() {
 	router := httprouter.New()
 	router.GET("/", IndexPage)
-	router.POST("/stream", Register)
-	router.POST("/stream/:address/message", PostMessage)
-	router.GET("/stream/:address", Index)
-	router.GET("/stream/:address/index", Index)
-	router.GET("/stream/:address/message/:id", GetMessage)
+	router.POST(APP, Register)
+	router.POST(APP+"/:address/message", PostMessage)
+	router.GET(APP+"/:address", Index)
+	router.GET(APP+"/:address/index", Index)
+	router.GET(APP+"/:address/message/:id", GetMessage)
 
 	n := negroni.Classic()
 	n.UseHandler(router)
