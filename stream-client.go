@@ -1,4 +1,4 @@
-package StreamClient
+package streamclient
 
 import (
 	"strconv"
