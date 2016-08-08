@@ -9,9 +9,14 @@ import (
 
 const address = "SFwExaKH1iu2iK9gW3W2dnRQZewcmGkv6q"
 const baseURI = "http://localhost:8080/stream/v1"
+const baseDir = "../" + address
+
+func cleanup() {
+	os.RemoveAll(baseDir)
+}
 
 func TestRegisterStream(t *testing.T) {
-	os.RemoveAll(address)
+	cleanup()
 	
 	stream := NewStream(baseURI, address)
 	if err := stream.Register(); err != nil {
@@ -20,7 +25,7 @@ func TestRegisterStream(t *testing.T) {
 }
 
 func TestStreamExisting(t *testing.T) {
-	os.RemoveAll(address)
+	cleanup()
 	
 	stream := NewStream(baseURI, address)
 	if err := stream.Register(); err != nil {
@@ -33,7 +38,7 @@ func TestStreamExisting(t *testing.T) {
 }
 
 func TestStreamMessage(t *testing.T) {
-	os.RemoveAll(address)
+	cleanup()
 
 	stream := NewStream(baseURI, address)
 	if err := stream.Register(); err != nil {
@@ -47,7 +52,7 @@ func TestStreamMessage(t *testing.T) {
 }
 
 func TestStreamIndex(t *testing.T) {
-	os.RemoveAll(address)
+	cleanup()
 	
 	stream := NewStream(baseURI, address)
 	if err := stream.Register(); err != nil {
@@ -71,7 +76,7 @@ func TestStreamIndex(t *testing.T) {
 }
 
 func TestStreamIndexFrom(t *testing.T) {
-	os.RemoveAll(address)
+	cleanup()
 
 	stream := NewStream(baseURI, address)
 	if err := stream.Register(); err != nil {
@@ -108,7 +113,7 @@ func TestStreamIndexFrom(t *testing.T) {
 }
 
 func TestStreamGetMessage(t *testing.T) {
-	os.RemoveAll(address)
+	cleanup()
 
 	stream := NewStream(baseURI, address)
 	if err := stream.Register(); err != nil {
