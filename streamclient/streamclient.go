@@ -156,6 +156,10 @@ func (s *Stream) GetIndex() ([]string, error) {
 		return nil, err
 	}
 	
+	if resp.StatusCode == 404 {
+		return nil, errors.New("not found")
+	}
+	
 	a, err := decodeResponseArray(resp)
 	if err != nil {
 		return nil, err

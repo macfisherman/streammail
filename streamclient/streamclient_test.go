@@ -139,3 +139,14 @@ func TestStreamGetMessage(t *testing.T) {
 		t.Error("expected [message one], got", msg)
 	}
 }
+
+func TestStreamGetIndexNoAddress(t *testing.T) {
+	cleanup()
+
+	stream := NewStream(baseURI, address)
+	_, err := stream.GetIndex()
+	
+	if err.Error() != "not found" {
+		t.Error("got", err.Error())
+	}
+}
