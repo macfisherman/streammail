@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"flag"
 )
 
 const VERSION = "v1"
@@ -185,6 +186,9 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func main() {
+	use_tls := flag.Bool("tls", true, "enable/disable tls")
+	flag.Parse()
+
 	router := httprouter.New()
 	router.GET("/", IndexPage)
 	router.POST(APP, Register)
@@ -196,5 +200,11 @@ func main() {
 	n := negroni.Classic()
 	n.UseHandler(router)
 
-	log.Fatal(http.ListenAndServe(":8080", n))
+	if *use_tls {
+		log.Print("serving with TLS")
+		log.Fatal(http.ListenAndServeTLS(":8080", "server.pem", "server.key", n))
+	} else {
+		log.Print("serving without TLS")
+		log.Fatal(http.ListenAndServe(":8080", n))
+	}
 }
