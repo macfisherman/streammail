@@ -20,6 +20,7 @@ const VERSION = "v1"
 const API = "stream"
 const APP = "/"+API+"/"+VERSION
 
+// simple wrapper function to write out golang vars as json
 func WriteJSON(w http.ResponseWriter, v interface{}) error {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -31,6 +32,7 @@ func WriteJSON(w http.ResponseWriter, v interface{}) error {
 	return nil
 }
 
+// report an error to client - in JSON
 func report_error(w http.ResponseWriter, code int, err string) {
 	w.WriteHeader(code)
 
@@ -39,16 +41,33 @@ func report_error(w http.ResponseWriter, code int, err string) {
 	})
 }
 
+// report a status to a client - in JSON
 func report_status(w http.ResponseWriter, code int, v interface{}) error {
 	w.WriteHeader(code)
 
 	return WriteJSON(w, v)
 }
 
+// very simple index page for now
 func IndexPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Fprint(w, "Welcome!\n")
 }
 
+// Stream API
+// POST /stream/ADDRESS/message
+//	The post body contains the message.
+//	Adds a message to ADDRESS. Returns a message-id. Messages ids are timestamps in UTC
+//	in RFC3339Nano format
+//
+// This implementation stores each message in a directory <address>, where each
+// message is a timestamp. This will allow for simple ordered listings without
+// requiring any state from the server.
+//
+// On success an HTTP 201 with location header is returned.
+// On error, an HTTP 409 is returned
+//
+// NOTE: even though the file is created with nano times, two go routines could come
+// up with the same file. Need to fix that.
 func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	address := ps.ByName("address")
 	filename := time.Now().UTC().Format(time.RFC3339Nano)
@@ -69,6 +88,13 @@ func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	report_status(w, 201, map[string]string{"ok": filename})
 }
 
+// Stream API
+// GET /stream/ADDRESS/message/ID
+//	gets a single message
+//
+// On success, returns 200 plus a data blob in the body
+// On error, returns either a 404 when the message does no exist
+//  or a 409 when unable to return the message due to a system error
 func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	filepath := ps.ByName("address") + "/" + ps.ByName("id")
 	msg, err := os.Open(filepath)
@@ -85,6 +111,27 @@ func GetMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+// Stream API
+// GET /stream/ADDRESS
+// GET /stream/ADDRESS?count=N
+// GET /stream/ADDRESS?from=ID
+// GET /stream/ADDRESS?from=ID&count=N
+//
+//	get message-ids, as a JSON array.
+//
+// The first form will return up to 100 message-ids starting with the first message.
+// The second form will return up to N message-ids, starting with the first message.
+// The third form will return up to 100 message-ids starting with message-id ID.
+// The forth form will return up to N message-ids starting from message-id ID.
+//
+// In all cases, message-ids are returned in increasing chronilogical order.
+//
+// The On success, returns a JSON array (up to N or 100 elements) of message-ids
+// On error, returns either
+//   404 if the address does not exist or
+//   409 if the server has a problem reading the directory where the messages are
+//   400 if the count N is not a number
+//   409 if the server cannot encode the data as JSON
 func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	address := ps.ByName("address")
 	vars := r.URL.Query()
@@ -122,6 +169,9 @@ func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		}
 	}
 
+	// advance to message-id specified in parameter from
+	// and collect that message-id and the remaining message-ids
+	// up to count
 	have := 0
 	if skipTo != "" {
 		var wantedNames []string
@@ -153,6 +203,20 @@ func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 }
 
+// Stream API
+// POST /stream
+// with JSON:	{ "address": ADDRESS }
+//	Register address with server
+//	ADDRESS MUST conform to base58Check
+//
+// On success returns an HTTP 201 with a Location header
+// On error returns either:
+//  400 - unable to parse input JSON
+//  400 - missing JSON field
+//  400 - invalid address
+//  400 - invalid Stream address (must start with an S or R)
+//  409 - unable to create the Stream address directory
+//
 func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var fields map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
@@ -177,6 +241,8 @@ func Register(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
+	// first go routine gets to create address, others
+	// will get OS error.
 	if err := os.Mkdir(address, 0755); err != nil {
 		report_error(w, 409, "unable to create address:"+err.Error())
 	} else {
