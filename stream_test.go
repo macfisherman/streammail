@@ -158,7 +158,7 @@ func TestStreamMessage(t *testing.T) {
 	// TODO: see if it is a valid time-stamp
 	_, ok := v["ok"].(string)
 	if !ok {
-		t.Error("Expected an ok response")
+		t.Errorf("Expected an ok response, got %v", v)
 	}
 
 	// see if there is a location header

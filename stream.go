@@ -65,14 +65,11 @@ func IndexPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 //
 // On success an HTTP 201 with location header is returned.
 // On error, an HTTP 409 is returned
-//
-// NOTE: even though the file is created with nano times, two go routines could come
-// up with the same file. Need to fix that.
 func PostMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	address := ps.ByName("address")
 	filename := time.Now().UTC().Format(time.RFC3339Nano)
 	path := address + "/" + filename
-	msg, err := os.Create(path)
+	msg, err := os.OpenFile(path, os.O_WRONLY | os.O_CREATE | os.O_EXCL, 0666)
 	if err != nil {
 		report_error(w, 409, "in creating message file "+path+": "+err.Error())
 		return
