@@ -6,6 +6,9 @@ import (
     "fmt"
 )
 
+// this program is just to demonstrate public/private keys
+// with elliptic curves. It is not needed for Stream.
+
 func main() {
     curve := elliptic.P256()
 
